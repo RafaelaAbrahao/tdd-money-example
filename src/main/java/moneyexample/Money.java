@@ -1,17 +1,20 @@
 package moneyexample;
 
-abstract class Money {
-    protected int amount; //The visibility has to change from private to protected so the subclass can still see it
+class Money implements Expression {
+    protected int amount;
     protected String currency;
 
     Money (int amount, String currency){
         this.amount = amount;
         this.currency = currency;
     }
-    abstract Money times(int multiplier);
 
-    protected String currency() {
+    public String currency() {
         return currency;
+    }
+
+    public String toString(){
+        return amount + "" + currency;
     }
 
     static Money dollar(int amount){
@@ -22,21 +25,32 @@ abstract class Money {
         return new Franc(amount, "CHF");
     }
 
+    @Override
     public boolean equals(Object object) {
         Money money = (Money) object;
-        return amount == money.amount && getClass().equals(money.getClass());
-        //This ensures that the equals method only returns true if both objects are of the exact same class
+        return amount == money.amount && currency().equals(money.currency);
+    }
+
+    @Override
+    public Expression plus(Expression addend) {
+        return new Sum(this, addend);
+    }
+
+    @Override
+    public Expression times(int multiplier) {
+        return new Money(amount * multiplier, currency);
+    }
+
+    @Override
+    public Money reduce(Bank bank, String to){
+        int rate = bank.rate(currency, to);
+        return new Money(amount/ rate, to);
     }
 }
 
 class Dollar extends Money {
-
     Dollar(int amount, String currency){
         super(amount, currency);
-    }
-
-    Money times(int multiplier) {
-        return new Dollar(amount * multiplier, currency);
     }
 }
 
@@ -44,8 +58,4 @@ class Franc extends Money{
     Franc(int amount, String currency){
         super(amount, currency);
     }
-
-    Money times (int multiplier){
-        return new Franc(amount * multiplier, currency);
-    }
-} //pagina 46
+}
